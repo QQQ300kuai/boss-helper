@@ -5,6 +5,7 @@ import { PipelineCacheManager } from '@/composables/usePipelineCache'
 import type { PipelineCacheItem, ProcessorType } from '@/types/pipelineCache'
 
 import type { HelperContext } from '../useHelper'
+import { LimitError } from './deliverError'
 import { DependencyMissingError } from './handles'
 import type {
   Handler,
@@ -297,6 +298,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           }
           if (isStop()) break
         } catch (e) {
+          if (e instanceof LimitError) throw e
           res = {
             isSkip: true,
             status: 'error',
@@ -381,13 +383,6 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           helper.jobMaps.set(jobData.key, data)
           helper.currentJob.value = jobData.key
           await execute(data, index)
-          if (
-            helper.statistics.todayData.value.success >= helper.conf.formData.deliveryLimit.value
-          ) {
-            stepMsg = `投递达到数量限制`
-            status.value = 'stop'
-            break
-          }
           await delay(helper.conf.formData.delayDeliveryInterval, isStop)
         }
         if (isStop()) break
@@ -401,6 +396,11 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         }
       }
     } catch (e) {
+      if (e instanceof LimitError) {
+        status.value = 'stop'
+        stepMsg = `投递结束: ${e.message}`
+        return
+      }
       logger.error('投递未知错误', e)
       stepMsg = `未知错误: ${e instanceof Error ? e.message : JSON.stringify(e)}`
     } finally {

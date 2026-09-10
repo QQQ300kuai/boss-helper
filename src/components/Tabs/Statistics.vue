@@ -13,6 +13,10 @@ const { todayData, statisticsData } = helper.statistics
 const conf = useConf()
 const statisticCycle = ref(1)
 
+async function clearTodaySuccess() {
+  await helper.statistics.clearTodaySuccess()
+}
+
 const statisticCycleData = [
   {
     label: '近三日投递',
@@ -60,7 +64,7 @@ onMounted(() => {
   <div class="flex gap-2 flex-col">
     <Alert
       id="config-statistics"
-      description="数据并不完全准确，投递上限根据自身情况调整, 建议 120-140, boss限制最高150"
+      description="投递数量仅供统计参考，实际投递上限以 Boss 返回结果为准"
       color="warning"
       show-icon
     />
@@ -142,6 +146,15 @@ onMounted(() => {
           @click="helper.stop()"
         >
           暂停
+        </UButton>
+        <UButton
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-trash-2"
+          data-help="将今日成功投递计数清零，不影响投递记录"
+          @click="clearTodaySuccess"
+        >
+          清空计数
         </UButton>
       </UFieldGroup>
       <UProgress

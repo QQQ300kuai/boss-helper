@@ -11,16 +11,15 @@ export const todayKey = 'local:web-geek-job-Today'
 export const statisticsKey = 'local:web-geek-job-Statistics'
 
 export const useStatistics = () => {
-  const date = getCurDay()
-
-  const todayData = ref<Statistics>({
-    date,
+  const createStatistics = (): Statistics => ({
+    date: getCurDay(),
     success: 0,
     total: 0,
     repeat: 0,
     activityFilter: 0,
     tasks: {},
   })
+  const todayData = ref<Statistics>(createStatistics())
 
   const statisticsData = ref<Statistics[]>([])
 
@@ -33,6 +32,7 @@ export const useStatistics = () => {
   )
 
   async function updateStatistics(curData = jsonClone(todayData.value)) {
+    const date = getCurDay()
     void counter.storageGet<Statistics[]>(statisticsKey, []).then((data) => {
       statisticsData.value = data
     })
@@ -47,14 +47,22 @@ export const useStatistics = () => {
     const statistics = await counter.storageGet(statisticsKey, [])
 
     const newStatistics = [g, ...statistics]
+    const newTodayData = createStatistics()
     await counter.storageSet(statisticsKey, newStatistics)
-    await counter.storageSet(todayKey, curData)
+    await counter.storageSet(todayKey, newTodayData)
+    todayData.value = newTodayData
     statisticsData.value = newStatistics
+  }
+
+  async function clearTodaySuccess() {
+    todayData.value.success = 0
+    await counter.storageSet(todayKey, jsonClone(todayData.value))
   }
 
   return {
     todayData,
     statisticsData,
     updateStatistics,
+    clearTodaySuccess,
   }
 }

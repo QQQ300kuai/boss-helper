@@ -76,7 +76,7 @@ const configItems = helper.getConfigItems()
           <UFormField v-if="conf.configLevel.intermediate" label="投递数量">
             <UInputNumber
               label="投递数量"
-              data-help="达到上限后会自动暂停，默认100次, 当前boss上限为150"
+              data-help="仅用于展示今日投递进度，不会限制投递；实际限制以 Boss 返回结果为准"
               v-model="conf.formData.deliveryLimit.value"
               :min="1"
               :max="155"
